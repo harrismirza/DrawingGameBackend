@@ -220,7 +220,7 @@ class JoinGameResource(object):
         gameQuery = self.db.games.find_one({'host': host})
 
         if gameQuery is None:
-            resp.body = json.dumps({"message": "Unable to find game. Try again or start a new one!"})
+            resp.body = json.dumps({"message": "Oops! We can't seem to find your game... Try again or start a new one!"})
 
         else:
             players = gameQuery['players']
