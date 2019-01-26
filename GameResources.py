@@ -1,5 +1,103 @@
 import json
 import falcon
+from random import choice
+
+catergories = ["alarm_clock",
+               "ambulance",
+               "angel",
+               "ant",
+               "backpack",
+               "barn",
+               "basket",
+               "bear",
+               "bee",
+               "bicycle",
+               "bird",
+               "book",
+               "brain",
+               "bridge",
+               "bulldozer",
+               "bus",
+               "butterfly",
+               "cactus",
+               "calendar",
+               "castle",
+               "cat",
+               "chair",
+               "couch",
+               "crab",
+               "cruise_ship",
+               "diving_board",
+               "dog",
+               "dolphin",
+               "duck",
+               "elephant",
+               "eye",
+               "face",
+               "fan",
+               "fire_hydrant",
+               "firetruck",
+               "flamingo",
+               "flower",
+               "frog",
+               "garden",
+               "hand",
+               "hedgehog",
+               "helicopter",
+               "kangaroo",
+               "key",
+               "lantern",
+               "lighthouse",
+               "lion",
+               "lobster",
+               "map",
+               "mermaid",
+               "monkey",
+               "mosquito",
+               "octopus",
+               "owl",
+               "paintbrush",
+               "palm_tree",
+               "parrot",
+               "passport",
+               "peas",
+               "penguin",
+               "pig",
+               "pineapple",
+               "pool",
+               "postcard",
+               "power_outlet",
+               "rabbit",
+               "radio",
+               "rain",
+               "rhinoceros",
+               "rifle",
+               "roller_coaster",
+               "sandwich",
+               "scorpion",
+               "sea_turtle",
+               "sheep",
+               "skull",
+               "snail",
+               "snowflake",
+               "speedboat",
+               "spider",
+               "squirrel",
+               "steak",
+               "stove",
+               "strawberry",
+               "swan",
+               "swing_set",
+               "the_mona_lisa",
+               "tiger",
+               "toothbrush",
+               "toothpaste",
+               "tractor",
+               "trombone",
+               "truck",
+               "whale",
+               "windmill",
+               "yoga"]
 
 
 class CreateGameResource(object):
@@ -17,8 +115,7 @@ class CreateGameResource(object):
         # Create new game
         self.db.games.insert_one({
             "host": reqJson["username"],
-            "numPlayers": reqJson["numPlayers"],
-            "players": [],
+            "players": {reqJson["username"]: choice(catergories)},
             "initialImages": {},
             "overlayImages": {},
             "guesses": {},
@@ -44,7 +141,7 @@ class GameInfoResource(object):
             resp.body = json.dumps(gameInfo)
 
 
-class RecieveInitialImageResource(object):
+class ReceiveInitialImagesResource(object):
     def __init__(self, pymongo):
         self.db = pymongo
 
@@ -127,7 +224,7 @@ class JoinGameResource(object):
 
         else:
             players = gameQuery['players']
-            players.append(username)
+            players["username"] = choice(catergories)
 
             self.db.games.update_one({'host': host}, {"$set": {'players': players}})
             resp.body = json.dumps({"message": str(username) + " joined " + str(host) + "'s game!"})
