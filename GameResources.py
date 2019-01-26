@@ -2,7 +2,7 @@ import json
 import falcon
 from random import choice
 
-catergories = ["alarm_clock",
+categories = ["alarm_clock",
                "ambulance",
                "angel",
                "ant",
@@ -224,7 +224,7 @@ class JoinGameResource(object):
 
         else:
             players = gameQuery['players']
-            players["username"] = choice(catergories)
+            players["username"] = choice(categories)
 
             self.db.games.update_one({'host': host}, {"$set": {'players': players}})
             resp.body = json.dumps({"message": str(username) + " joined " + str(host) + "'s game!"})
