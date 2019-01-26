@@ -130,3 +130,5 @@ class JoinGameResource(object):
             players.append(username)
 
             self.db.games.update_one({'host': host}, {"$set": {'players': players}})
+            resp.body = json.dumps({"message": str(username) + " joined " + str(host) + "'s game!"})
+
