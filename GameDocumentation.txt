@@ -1,0 +1,108 @@
+====================
+User Routes
+====================
+/user/login
+===============
+Request:
+{
+	"username": <Login Username>,
+	"password": <Login Password>
+}
+Response:
+{
+	"auth": True/False,
+	"location": "GB, US, etc..."
+}
+
+/user/register
+================
+Request:
+{
+	"username": <Login Username>,
+	"password": <Login Password>,
+	"location": <User Location code>
+}
+Response:
+{
+	"message": "Error/Success"
+}
+
+====================
+Game Routes
+====================
+/game/create
+===============
+Request:
+{
+	"username": <Host Username>
+}
+Response:
+{
+	"message": "Created Game!"
+}
+
+/game/info
+===============
+Request:
+{
+	"host": <Host Username>
+}
+Response:
+{
+	"host": <Host Username>,
+	"players": <Dictionary of players to categories ({Player1:dog, Player2:cat})>,
+	"initialImages": <Dictionary of Players to Initial Drawings ({Player1: Drawing1, Player2: Drawing2})>,
+	"overlayImages":  <Nested Dictionay of Players to Other Players to Overlay Drawings ({Player1: {Player2: Drawing1}, Player2: {Player1: Drawing2}})>
+	"guesses": <Nested Dictionay of Players to Other Players to Guessess ({Player1: {Player2: Player2}, Player2: {Player1: AI}})>
+}
+
+/game/initialImages
+===============
+Request:
+{
+	"host": <Host Username>,
+	"username": <Player Username>,
+	"initialImages": <Initial Image for Player>
+}
+Response:
+{
+	"message": "Error/Success"
+}
+
+/game/overlayImages
+===============
+Request:
+{
+	"host": <Host Username>,
+	"username": <Player Username>,
+	"overlayImages": <Dict of Overlay Images for Player, in response to all initial Images>
+}
+Response:
+{
+	"message": "Error/Success"
+}
+
+/game/guesses
+===============
+Request:
+{
+	"host": <Host Username>,
+	"username": <Player Username>,
+	"guesses": <Dict of guesses for Player, in response to all overlay images>
+}
+Response:
+{
+	"message": "Error/Success"
+}
+
+/game/join
+===============
+Request:
+{
+	"host": <Host Username>,
+	"username": <Player Username>
+}
+Response:
+{
+	"message": "Error/Success"
+}
