@@ -1,7 +1,5 @@
 import multiprocessing
-import tensorflow
 import json
-import numpy as np
 import requests
 from pymongo import MongoClient
 import traceback
