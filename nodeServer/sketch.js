@@ -14,7 +14,7 @@ async function sketch(category, lines) {
 
     // Model state.
     let modelState; // Store the hidden states of rnn's neurons.
-    let temperature = 0.25; // Controls the amount of uncertainty of the model.
+    let temperature = Number.MIN_VALUE; // Controls the amount of uncertainty of the model.
     let modelLoaded = false;
 
     let dx, dy; // Offsets of the pen strokes, in pixels.
@@ -38,7 +38,7 @@ async function sketch(category, lines) {
         console.log('SketchRNN model loaded.');
 
         // Initialize the scale factor for the model. Bigger -> large outputs
-        model.setPixelFactor(5.0);
+        model.setPixelFactor(10);
         console.log("Bias: " + model.lstmBias);
         console.log("Num Units: " + model.numUnits);
     };

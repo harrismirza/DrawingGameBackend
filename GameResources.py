@@ -110,7 +110,7 @@ class CreateGameResource(object):
         reqJson = json.loads(data)
 
         # Delete pre-existing games in the database
-        self.db.games.delete_many({"username": reqJson["username"]})
+        self.db.games.delete_many({"host": reqJson["username"]})
 
         # Create new game
         self.db.games.insert_one({
@@ -119,6 +119,7 @@ class CreateGameResource(object):
             "initialImages": {},
             "overlayImages": {},
             "guesses": {},
+            "started": False
         })
 
         resp.body = json.dumps({"message": "Created Game!"})
@@ -132,8 +133,11 @@ class GameInfoResource(object):
         data = req.stream.read(req.content_length or 0)
         reqJson = json.loads(data)
 
+
         # Find game and return object
         gameInfo = self.db.games.find_one({"host": reqJson["host"]})
+
+        del gameInfo["_id"]
 
         if gameInfo is None:
             resp.body = json.dumps({"message": "Game does not exist"})
@@ -190,7 +194,7 @@ class ReceiveOverlayImagesResource(object):
             overlayImages = gameInfo['overlayImages']
             overlayImages[reqJson['username']] = reqJson["images"]
 
-            self.db.games.update_one({"host": reqJson["host"]}, {"$set": {"overlayImages", overlayImages}})
+            self.db.games.update_one({"host": reqJson["host"]}, {"$set": {"overlayImages": overlayImages}})
             resp.body = json.dumps({"message": "Successfully added images to DB"})
         else:
             resp.body = json.dumps({"message": "Game does not exist"})
@@ -211,7 +215,7 @@ class ReceiveGuessesResource(object):
             guesses = gameInfo['guesses']
             guesses[reqJson['username']] = reqJson["guesses"]
 
-            self.db.games.update_one({"host": reqJson["host"]}, {"$set": {"guesses", guesses}})
+            self.db.games.update_one({"host": reqJson["host"]}, {"$set": {"guesses": guesses}})
             resp.body = json.dumps({"message": "Successfully added guesses to DB"})
         else:
             resp.body = json.dumps({"message": "Game does not exist"})
@@ -237,8 +241,20 @@ class JoinGameResource(object):
 
         else:
             players = gameQuery['players']
-            players["username"] = choice(catergories)
+            players[username] = choice(catergories)
 
             self.db.games.update_one({'host': host}, {"$set": {'players': players}})
             resp.body = json.dumps({"message": str(username) + " joined " + str(host) + "'s game!"})
 
+class StartGameResource(object):
+    def __init__(self, pymongo):
+        self.db = pymongo
+
+    def on_post(self, req, resp):
+        data = req.stream.read(req.content_length or 0)
+        game = json.loads(data)
+
+        host = game['host']
+
+        # Find game
+        gameQuery = self.db.games.update_one({'host': host}, {"$set":{"started":True}})

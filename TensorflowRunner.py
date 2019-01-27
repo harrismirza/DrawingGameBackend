@@ -31,7 +31,8 @@ class TensorflowRunner(object):
                 # Get current game
                 game = db.games.find_one({"host": job["host"]})
                 overlayImages = game["overlayImages"]
-                overlayImages["AI"] = {}
+                if "AI" not in overlayImages:
+                    overlayImages["AI"] = {}
                 overlayImages["AI"][job["user"]] = lines
 
                 db.games.update_one({"host": job["host"]}, {"$set": {"overlayImages": overlayImages}})
