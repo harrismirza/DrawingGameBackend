@@ -2,36 +2,41 @@ import multiprocessing
 import tensorflow
 import json
 import numpy as np
+import requests
+from pymongo import MongoClient
+import traceback
 
 
 class TensorflowRunner(object):
 
     def __init__(self):
         self.queue = multiprocessing.Queue()
+        self.p = multiprocessing.Process(target=self.startProcessing)
+        self.p.start()
 
     def startProcessing(self):
         while True:
-            job = self.queue.get()
+            try:
+                job = self.queue.get()
+                print("Got job!")
 
-            # Load model
+                # Send job to NodeJS Server
+                url = "http://localhost:3005/"
+                response = requests.post(url, json=job["data"])
 
+                lines = response.json()
+                print("Received response")
 
-if __name__ == '__main__':
-    # Test Loading model
-    modelPath = "./nodejs code/alarm_clock.gen.full.json"
-    modelData = json.load(open("./nodejs code/alarm_clock.gen.full.json", "r"))
-    info = modelData[0]
-    dimensions = modelData[1]
-    num_blobs = dimensions.length
-    weightsIn = modelData[2]
-    weights = [0] * len(weightsIn)
-    max_weight = 10.0
-    N_mixture = 20
+                # Save lines to database in appropriate place
+                db = MongoClient('localhost', 27017).draw
 
-    max_seq_len = info.max_seq_len
+                # Get current game
+                game = db.games.find_one({"host": job["host"]})
+                overlayImages = game["overlayImages"]
+                overlayImages["AI"] = {}
+                overlayImages["AI"][job["user"]] = lines
 
-    pixel_factor = 2.0
-    scale_factor = info.scale_factor / pixel_factor
-
-    for i in range(0, num_blobs):
-        weights[i] = np.Array(weightsIn[i])
+                db.games.update_one({"host": job["host"]}, {"$set": {"overlayImages": overlayImages}})
+            except:
+                traceback.print_exc()
+                pass

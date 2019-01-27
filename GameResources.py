@@ -2,7 +2,7 @@ import json
 import falcon
 from random import choice
 
-categories = ["alarm_clock",
+catergories = ["alarm_clock",
                "ambulance",
                "angel",
                "ant",
@@ -110,12 +110,12 @@ class CreateGameResource(object):
         reqJson = json.loads(data)
 
         # Delete pre-existing games in the database
-        self.db.games.delete_many({"host": reqJson["username"]})
+        self.db.games.delete_many({"username": reqJson["username"]})
 
         # Create new game
         self.db.games.insert_one({
             "host": reqJson["username"],
-            "players": {reqJson["username"]: choice(categories)},
+            "players": {reqJson["username"]: choice(catergories)},
             "initialImages": {},
             "overlayImages": {},
             "guesses": {},
@@ -134,7 +134,6 @@ class GameInfoResource(object):
 
         # Find game and return object
         gameInfo = self.db.games.find_one({"host": reqJson["host"]})
-        del gameInfo["_id"]
 
         if gameInfo is None:
             resp.body = json.dumps({"message": "Game does not exist"})
@@ -143,8 +142,9 @@ class GameInfoResource(object):
 
 
 class ReceiveInitialImagesResource(object):
-    def __init__(self, pymongo):
+    def __init__(self, pymongo, tf_runner):
         self.db = pymongo
+        self.tfr = tf_runner
 
     def on_post(self, req, resp):
         data = req.stream.read(req.content_length or 0)
@@ -156,6 +156,18 @@ class ReceiveInitialImagesResource(object):
         if gameInfo is not None:
             initialImages = gameInfo['initialImages']
             initialImages[reqJson['username']] = reqJson["image"]
+
+            category = gameInfo["players"][reqJson['username']]
+
+            # Trigger ML
+            self.tfr.queue.put({
+                "host": reqJson["host"],
+                "user": reqJson["username"],
+                "data": {
+                    "category": category,
+                    "lines": reqJson["image"]
+                }
+            })
 
             self.db.games.update_one({"host": reqJson["host"]}, {"$set": {"initialImages": initialImages}})
             resp.body = json.dumps({"message": "Successfully added image to DB"})
@@ -178,7 +190,7 @@ class ReceiveOverlayImagesResource(object):
             overlayImages = gameInfo['overlayImages']
             overlayImages[reqJson['username']] = reqJson["images"]
 
-            self.db.games.update_one({"host": reqJson["host"]}, {"$set": {"overlayImages": overlayImages}})
+            self.db.games.update_one({"host": reqJson["host"]}, {"$set": {"overlayImages", overlayImages}})
             resp.body = json.dumps({"message": "Successfully added images to DB"})
         else:
             resp.body = json.dumps({"message": "Game does not exist"})
@@ -199,7 +211,7 @@ class ReceiveGuessesResource(object):
             guesses = gameInfo['guesses']
             guesses[reqJson['username']] = reqJson["guesses"]
 
-            self.db.games.update_one({"host": reqJson["host"]}, {"$set": {"guesses": guesses}})
+            self.db.games.update_one({"host": reqJson["host"]}, {"$set": {"guesses", guesses}})
             resp.body = json.dumps({"message": "Successfully added guesses to DB"})
         else:
             resp.body = json.dumps({"message": "Game does not exist"})
@@ -221,11 +233,11 @@ class JoinGameResource(object):
         gameQuery = self.db.games.find_one({'host': host})
 
         if gameQuery is None:
-            resp.body = json.dumps({"message": "Oops! We can't seem to find your game... Try again or start a new one!"})
+            resp.body = json.dumps({"message": "Unable to find game. Try again or start a new one!"})
 
         else:
             players = gameQuery['players']
-            players[username] = choice(categories)
+            players["username"] = choice(catergories)
 
             self.db.games.update_one({'host': host}, {"$set": {'players': players}})
             resp.body = json.dumps({"message": str(username) + " joined " + str(host) + "'s game!"})
