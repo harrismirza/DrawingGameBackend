@@ -133,7 +133,6 @@ class GameInfoResource(object):
         data = req.stream.read(req.content_length or 0)
         reqJson = json.loads(data)
 
-
         # Find game and return object
         gameInfo = self.db.games.find_one({"host": reqJson["host"]})
 
